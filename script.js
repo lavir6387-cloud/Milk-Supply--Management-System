@@ -1,3 +1,10 @@
+import {
+  getFirestore,
+  collection,
+  addDoc
+} from "https://www.gstatic.com/firebasejs/12.15.0/firebase-firestore.js";
+
+const db = getFirestore(window.firebaseApp);
 import { getFirestore, collection, addDoc } from "https://www.gstatic.com/firebasejs/12.15.0/firebase-firestore.js";
 
 const db = getFirestore(window.firebaseApp);
@@ -11,7 +18,7 @@ const db = getFirestore(window.firebaseApp);
    --------------------------------------------------------- */
 const DB_KEYS = {
   customers: 'dd_customers',
-  entries: 'dd_entries',
+  entries: 'dd_entries',  
   payments: 'dd_payments',
   settings: 'dd_settings',
   counters: 'dd_counters'
@@ -286,6 +293,15 @@ async function handleCustomerFormSubmit(e) {
       photo: photoData
     };
     customers.push(newCustomer);
+    await addDoc(collection(db, "customers"), {
+  customerId: newCustomer.id,
+  name: newCustomer.name,
+  mobile: newCustomer.mobile,
+  address: newCustomer.address,
+  rate: newCustomer.rate,
+  joinDate: newCustomer.joinDate,
+  status: newCustomer.status
+});gi
     try {
   await addDoc(collection(db, "customers"), newCustomer);
   console.log("Customer saved to Firebase");
