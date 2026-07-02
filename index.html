@@ -1,0 +1,571 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>DairyDesk | Milk Supply Management System</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🥛</text></svg>">
+
+<!-- Google Font -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+
+<!-- Chart.js (utility library for graphs, not a UI framework) -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.4/chart.umd.min.js"></script>
+<!-- jsPDF + html2canvas (utility libraries for PDF export) -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<!-- QRCode generator (utility library) -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<!-- ============ LOADING SCREEN ============ -->
+<div id="loadingScreen" class="loading-screen">
+  <div class="loader-drop">🥛</div>
+  <p>Loading DairyDesk...</p>
+</div>
+
+<!-- ============ TOAST CONTAINER ============ -->
+<div id="toastContainer" class="toast-container"></div>
+
+<!-- ============ CONFIRM MODAL ============ -->
+<div id="confirmModal" class="modal-overlay hidden">
+  <div class="modal-box">
+    <h3 id="confirmTitle">Are you sure?</h3>
+    <p id="confirmMessage">This action cannot be undone.</p>
+    <div class="modal-actions">
+      <button class="btn btn-outline" id="confirmCancelBtn">Cancel</button>
+      <button class="btn btn-danger" id="confirmOkBtn">Yes, Continue</button>
+    </div>
+  </div>
+</div>
+
+<!-- ============ TOP NAVBAR ============ -->
+<header class="navbar">
+  <div class="navbar-left">
+    <button id="sidebarToggle" class="icon-btn" aria-label="Toggle sidebar">☰</button>
+    <div class="brand">
+      <span class="brand-icon">🥛</span>
+      <span class="brand-text">DairyDesk</span>
+    </div>
+  </div>
+
+  <div class="navbar-center">
+    <input type="text" id="globalSearch" class="global-search" placeholder="Search customer name or mobile number...">
+  </div>
+
+  <div class="navbar-right">
+    <button id="darkModeToggle" class="icon-btn" title="Toggle dark mode">🌙</button>
+    <button id="backupBtnNav" class="icon-btn" title="Backup data">⬇</button>
+    <div class="nav-profile">
+      <span class="nav-profile-avatar">DD</span>
+    </div>
+  </div>
+</header>
+
+<div class="app-shell">
+
+  <!-- ============ SIDEBAR ============ -->
+  <aside class="sidebar" id="sidebar">
+    <nav class="sidebar-nav">
+      <a href="#" class="nav-link active" data-page="dashboard"><span class="nav-icon">📊</span> Dashboard</a>
+      <a href="#" class="nav-link" data-page="customers"><span class="nav-icon">👥</span> Customers</a>
+      <a href="#" class="nav-link" data-page="daily-entry"><span class="nav-icon">🧾</span> Daily Milk Entry</a>
+      <a href="#" class="nav-link" data-page="history"><span class="nav-icon">📅</span> Entry History</a>
+      <a href="#" class="nav-link" data-page="payments"><span class="nav-icon">💳</span> Payments</a>
+      <a href="#" class="nav-link" data-page="bills"><span class="nav-icon">🧮</span> Bill Generation</a>
+      <a href="#" class="nav-link" data-page="reports"><span class="nav-icon">📈</span> Reports</a>
+      <a href="#" class="nav-link" data-page="settings"><span class="nav-icon">⚙️</span> Settings & Backup</a>
+    </nav>
+    <div class="sidebar-footer">
+      <p>DairyDesk v1.0</p>
+      <p class="sidebar-footer-sub">Premium Milk Supply Manager</p>
+    </div>
+  </aside>
+
+  <div class="sidebar-overlay" id="sidebarOverlay"></div>
+
+  <!-- ============ MAIN CONTENT ============ -->
+  <main class="main-content">
+
+    <!-- ===================== DASHBOARD PAGE ===================== -->
+    <section class="page active" id="page-dashboard">
+      <div class="page-header">
+        <div>
+          <h1>Dashboard</h1>
+          <p class="page-subtitle">Overview of your dairy business</p>
+        </div>
+        <div class="page-header-actions">
+          <span class="today-date" id="todayDateLabel"></span>
+        </div>
+      </div>
+
+      <div class="stat-grid">
+        <div class="stat-card">
+          <div class="stat-icon" style="background:#E0F2F1;color:#009688;">👥</div>
+          <div class="stat-info"><span class="stat-value" id="statTotalCustomers">0</span><span class="stat-label">Total Customers</span></div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon" style="background:#E0F2F1;color:#009688;">🥛</div>
+          <div class="stat-info"><span class="stat-value" id="statTodayMilk">0 L</span><span class="stat-label">Today's Milk Collection</span></div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon" style="background:#E0F2F1;color:#00695C;">📦</div>
+          <div class="stat-info"><span class="stat-value" id="statMonthMilk">0 L</span><span class="stat-label">Monthly Milk Collection</span></div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon" style="background:#DCFCE7;color:#22C55E;">💰</div>
+          <div class="stat-info"><span class="stat-value" id="statTotalIncome">₹0</span><span class="stat-label">Total Income</span></div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon" style="background:#FEF3C7;color:#F59E0B;">⏳</div>
+          <div class="stat-info"><span class="stat-value" id="statPending">₹0</span><span class="stat-label">Pending Payments</span></div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon" style="background:#DCFCE7;color:#22C55E;">✅</div>
+          <div class="stat-info"><span class="stat-value" id="statPaidCustomers">0</span><span class="stat-label">Paid Customers</span></div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon" style="background:#E0F2F1;color:#009688;">📥</div>
+          <div class="stat-info"><span class="stat-value" id="statTodayEntries">0</span><span class="stat-label">Today's Entries</span></div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon" style="background:#E0F2F1;color:#00695C;">📆</div>
+          <div class="stat-info"><span class="stat-value" id="statMonthAmount">₹0</span><span class="stat-label">Monthly Collection Amount</span></div>
+        </div>
+      </div>
+
+      <div class="chart-grid">
+        <div class="card chart-card">
+          <div class="card-header"><h3>Income Trend (Last 7 Days)</h3></div>
+          <canvas id="incomeChart" height="220"></canvas>
+        </div>
+        <div class="card chart-card">
+          <div class="card-header"><h3>Milk Collection (Last 7 Days)</h3></div>
+          <canvas id="milkChart" height="220"></canvas>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-header"><h3>Recent Entries</h3></div>
+        <div class="table-wrap">
+          <table class="data-table" id="recentEntriesTable">
+            <thead><tr><th>Customer</th><th>Date</th><th>Morning</th><th>Evening</th><th>Total</th><th>Amount</th></tr></thead>
+            <tbody></tbody>
+          </table>
+        </div>
+        <div class="empty-state hidden" id="recentEntriesEmpty">
+          <div class="empty-icon">📭</div>
+          <p>No entries yet. Add your first daily milk entry to see it here.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===================== CUSTOMERS PAGE ===================== -->
+    <section class="page" id="page-customers">
+      <div class="page-header">
+        <div>
+          <h1>Customer Management</h1>
+          <p class="page-subtitle">Manage all your dairy customers</p>
+        </div>
+        <div class="page-header-actions">
+          <button class="btn btn-primary" id="addCustomerBtn">+ Add Customer</button>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="toolbar">
+          <input type="text" id="customerSearchInput" class="input" placeholder="🔍 Search by name, mobile or ID...">
+          <select id="customerStatusFilter" class="input select-input">
+            <option value="all">All Status</option>
+            <option value="Active">Active</option>
+            <option value="Inactive">Inactive</option>
+          </select>
+        </div>
+        <div class="table-wrap">
+          <table class="data-table" id="customersTable">
+            <thead>
+              <tr>
+                <th>Photo</th><th>ID</th><th>Name</th><th>Mobile</th><th>Rate/L</th><th>Joining Date</th><th>Status</th><th>Actions</th>
+              </tr>
+            </thead>
+            <tbody></tbody>
+          </table>
+        </div>
+        <div class="empty-state hidden" id="customersEmpty">
+          <div class="empty-icon">👥</div>
+          <p>No customers yet. Click "Add Customer" to get started.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===================== DAILY ENTRY PAGE ===================== -->
+    <section class="page" id="page-daily-entry">
+      <div class="page-header">
+        <div>
+          <h1>Daily Milk Entry</h1>
+          <p class="page-subtitle">Record today's milk collection per customer</p>
+        </div>
+      </div>
+
+      <div class="card form-card">
+        <form id="dailyEntryForm">
+          <div class="form-grid">
+            <div class="form-group">
+              <label>Select Customer *</label>
+              <select id="entryCustomer" class="input" required>
+                <option value="">-- Select Customer --</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label>Date *</label>
+              <input type="date" id="entryDate" class="input" required>
+            </div>
+            <div class="form-group">
+              <label>Morning Milk (Litres)</label>
+              <input type="number" id="entryMorning" class="input" min="0" step="0.1" value="0">
+            </div>
+            <div class="form-group">
+              <label>Evening Milk (Litres)</label>
+              <input type="number" id="entryEvening" class="input" min="0" step="0.1" value="0">
+            </div>
+            <div class="form-group">
+              <label>Rate Per Litre (₹) *</label>
+              <input type="number" id="entryRate" class="input" min="0" step="0.1" required>
+            </div>
+            <div class="form-group">
+              <label>Total Milk (Litres)</label>
+              <input type="text" id="entryTotalMilk" class="input" readonly value="0.0">
+            </div>
+            <div class="form-group">
+              <label>Total Amount (₹)</label>
+              <input type="text" id="entryTotalAmount" class="input" readonly value="0.00">
+            </div>
+          </div>
+          <div class="form-actions">
+            <button type="reset" class="btn btn-outline">Clear</button>
+            <button type="submit" class="btn btn-primary">Save Entry</button>
+          </div>
+        </form>
+      </div>
+    </section>
+
+    <!-- ===================== HISTORY PAGE ===================== -->
+    <section class="page" id="page-history">
+      <div class="page-header">
+        <div>
+          <h1>Daily Entry History</h1>
+          <p class="page-subtitle">All recorded milk entries</p>
+        </div>
+        <div class="page-header-actions">
+          <button class="btn btn-outline" id="exportHistoryCsv">Export CSV</button>
+          <button class="btn btn-outline" id="printHistoryBtn">Print</button>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="toolbar toolbar-wrap">
+          <input type="text" id="historySearch" class="input" placeholder="🔍 Search customer...">
+          <select id="historyCustomerFilter" class="input select-input"><option value="all">All Customers</option></select>
+          <input type="date" id="historyDateFrom" class="input" title="From date">
+          <input type="date" id="historyDateTo" class="input" title="To date">
+          <select id="historySort" class="input select-input">
+            <option value="date-desc">Date: Newest First</option>
+            <option value="date-asc">Date: Oldest First</option>
+            <option value="amount-desc">Amount: High to Low</option>
+            <option value="amount-asc">Amount: Low to High</option>
+          </select>
+        </div>
+        <div class="table-wrap">
+          <table class="data-table" id="historyTable">
+            <thead>
+              <tr><th>Customer</th><th>Date</th><th>Morning (L)</th><th>Evening (L)</th><th>Total (L)</th><th>Rate</th><th>Amount</th><th>Actions</th></tr>
+            </thead>
+            <tbody></tbody>
+          </table>
+        </div>
+        <div class="empty-state hidden" id="historyEmpty">
+          <div class="empty-icon">📭</div>
+          <p>No entries match your filters.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===================== PAYMENTS PAGE ===================== -->
+    <section class="page" id="page-payments">
+      <div class="page-header">
+        <div>
+          <h1>Payment Management</h1>
+          <p class="page-subtitle">Track pending and paid customer payments</p>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="toolbar">
+          <input type="text" id="paymentSearch" class="input" placeholder="🔍 Search customer...">
+          <select id="paymentStatusFilter" class="input select-input">
+            <option value="all">All</option>
+            <option value="Pending">Pending</option>
+            <option value="Paid">Paid</option>
+          </select>
+          <select id="paymentMonthFilter" class="input select-input"></select>
+        </div>
+        <div class="table-wrap">
+          <table class="data-table" id="paymentsTable">
+            <thead>
+              <tr><th>Customer</th><th>Month</th><th>Total Amount</th><th>Paid Amount</th><th>Pending Amount</th><th>Status</th><th>Actions</th></tr>
+            </thead>
+            <tbody></tbody>
+          </table>
+        </div>
+        <div class="empty-state hidden" id="paymentsEmpty">
+          <div class="empty-icon">💳</div>
+          <p>No payment records yet. Add daily entries to generate monthly dues.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- Payment update modal -->
+    <div id="paymentModal" class="modal-overlay hidden">
+      <div class="modal-box">
+        <h3>Update Payment</h3>
+        <div class="form-group">
+          <label>Payment Amount (₹)</label>
+          <input type="number" id="paymentAmountInput" class="input" min="0" step="0.01">
+        </div>
+        <div class="form-group">
+          <label>Payment Date</label>
+          <input type="date" id="paymentDateInput" class="input">
+        </div>
+        <div class="form-group">
+          <label>Payment Method</label>
+          <select id="paymentMethodInput" class="input">
+            <option>Cash</option>
+            <option>UPI</option>
+            <option>Bank Transfer</option>
+            <option>Cheque</option>
+            <option>Other</option>
+          </select>
+        </div>
+        <div class="modal-actions">
+          <button class="btn btn-outline" id="paymentCancelBtn">Cancel</button>
+          <button class="btn btn-primary" id="paymentSaveBtn">Save Payment</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===================== BILLS PAGE ===================== -->
+    <section class="page" id="page-bills">
+      <div class="page-header">
+        <div>
+          <h1>Bill Generation</h1>
+          <p class="page-subtitle">Generate a professional monthly bill for any customer</p>
+        </div>
+      </div>
+
+      <div class="card form-card">
+        <div class="form-grid">
+          <div class="form-group">
+            <label>Select Customer *</label>
+            <select id="billCustomer" class="input"><option value="">-- Select Customer --</option></select>
+          </div>
+          <div class="form-group">
+            <label>Bill Month *</label>
+            <input type="month" id="billMonth" class="input">
+          </div>
+        </div>
+        <div class="form-actions">
+          <button class="btn btn-primary" id="generateBillBtn">Generate Bill</button>
+        </div>
+      </div>
+
+      <div class="card hidden" id="billPreviewCard">
+        <div class="bill-toolbar">
+          <button class="btn btn-outline" id="printBillBtn">🖨 Print Bill</button>
+          <button class="btn btn-outline" id="downloadBillPdfBtn">⬇ Download PDF</button>
+          <button class="btn btn-outline" id="shareWhatsappBtn">📲 Share on WhatsApp</button>
+        </div>
+        <div id="billPreview" class="bill-preview"></div>
+      </div>
+    </section>
+
+    <!-- ===================== REPORTS PAGE ===================== -->
+    <section class="page" id="page-reports">
+      <div class="page-header">
+        <div>
+          <h1>Reports</h1>
+          <p class="page-subtitle">Generate business insights and reports</p>
+        </div>
+      </div>
+
+      <div class="card form-card">
+        <div class="form-grid">
+          <div class="form-group">
+            <label>Report Type</label>
+            <select id="reportType" class="input">
+              <option value="daily">Daily Report</option>
+              <option value="weekly">Weekly Report</option>
+              <option value="monthly">Monthly Report</option>
+              <option value="yearly">Yearly Report</option>
+              <option value="customer">Customer Report</option>
+              <option value="income">Income Report</option>
+              <option value="milk">Milk Collection Report</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Date</label>
+            <input type="date" id="reportDate" class="input">
+          </div>
+          <div class="form-group">
+            <label>Month</label>
+            <input type="month" id="reportMonth" class="input">
+          </div>
+          <div class="form-group">
+            <label>Year</label>
+            <input type="number" id="reportYear" class="input" placeholder="2026">
+          </div>
+          <div class="form-group">
+            <label>Customer (for Customer Report)</label>
+            <select id="reportCustomer" class="input"><option value="">-- All / Select --</option></select>
+          </div>
+        </div>
+        <div class="form-actions">
+          <button class="btn btn-primary" id="generateReportBtn">Generate Report</button>
+          <button class="btn btn-outline" id="exportReportCsvBtn">Export CSV</button>
+          <button class="btn btn-outline" id="printReportBtn">Print</button>
+        </div>
+      </div>
+
+      <div class="card" id="reportResultCard">
+        <div id="reportSummary" class="report-summary"></div>
+        <div class="table-wrap">
+          <table class="data-table" id="reportTable">
+            <thead></thead>
+            <tbody></tbody>
+          </table>
+        </div>
+        <div class="empty-state" id="reportEmpty">
+          <div class="empty-icon">📈</div>
+          <p>Select a report type and click "Generate Report" to view results.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===================== SETTINGS / BACKUP PAGE ===================== -->
+    <section class="page" id="page-settings">
+      <div class="page-header">
+        <div>
+          <h1>Settings & Backup</h1>
+          <p class="page-subtitle">Business details, backup and restore</p>
+        </div>
+      </div>
+
+      <div class="card form-card">
+        <h3 class="section-title">Business Details</h3>
+        <div class="form-grid">
+          <div class="form-group">
+            <label>Business Name</label>
+            <input type="text" id="settingsBusinessName" class="input" placeholder="e.g. Shree Krishna Dairy">
+          </div>
+          <div class="form-group">
+            <label>Owner / Contact Phone</label>
+            <input type="text" id="settingsBusinessPhone" class="input" placeholder="e.g. 9876543210">
+          </div>
+          <div class="form-group">
+            <label>Address</label>
+            <input type="text" id="settingsBusinessAddress" class="input" placeholder="Business address">
+          </div>
+          <div class="form-group">
+            <label>Business Logo</label>
+            <input type="file" id="settingsLogoInput" class="input" accept="image/*">
+          </div>
+        </div>
+        <div class="form-actions">
+          <button class="btn btn-primary" id="saveSettingsBtn">Save Settings</button>
+        </div>
+      </div>
+
+      <div class="card">
+        <h3 class="section-title">Backup & Restore</h3>
+        <p class="muted-text">Export all your data as a JSON backup file, or restore from a previous backup. All data is stored locally in your browser.</p>
+        <div class="form-actions">
+          <button class="btn btn-outline" id="backupDataBtn">⬇ Download Backup</button>
+          <label class="btn btn-outline file-btn">
+            ⬆ Restore Backup
+            <input type="file" id="restoreFileInput" accept=".json" hidden>
+          </label>
+          <button class="btn btn-danger" id="clearAllDataBtn">🗑 Clear All Data</button>
+        </div>
+      </div>
+    </section>
+
+  </main>
+</div>
+
+<!-- Customer Modal -->
+<div id="customerModal" class="modal-overlay hidden">
+  <div class="modal-box modal-box-lg">
+    <h3 id="customerModalTitle">Add Customer</h3>
+    <form id="customerForm">
+      <input type="hidden" id="customerFormId">
+      <div class="form-grid">
+        <div class="form-group">
+          <label>Full Name *</label>
+          <input type="text" id="customerName" class="input" required>
+        </div>
+        <div class="form-group">
+          <label>Mobile Number *</label>
+          <input type="tel" id="customerMobile" class="input" pattern="[0-9]{10}" maxlength="10" required>
+        </div>
+        <div class="form-group">
+          <label>Address</label>
+          <input type="text" id="customerAddress" class="input">
+        </div>
+        <div class="form-group">
+          <label>Rate Per Litre (₹) *</label>
+          <input type="number" id="customerRate" class="input" min="0" step="0.1" required>
+        </div>
+        <div class="form-group">
+          <label>Joining Date</label>
+          <input type="date" id="customerJoinDate" class="input">
+        </div>
+        <div class="form-group">
+          <label>Status</label>
+          <select id="customerStatus" class="input">
+            <option>Active</option>
+            <option>Inactive</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Profile Photo</label>
+          <input type="file" id="customerPhoto" class="input" accept="image/*">
+        </div>
+        <div class="form-group form-group-full">
+          <label>Notes</label>
+          <textarea id="customerNotes" class="input" rows="2"></textarea>
+        </div>
+      </div>
+      <div class="modal-actions">
+        <button type="button" class="btn btn-outline" id="customerCancelBtn">Cancel</button>
+        <button type="submit" class="btn btn-primary">Save Customer</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Customer Profile View Modal -->
+<div id="customerProfileModal" class="modal-overlay hidden">
+  <div class="modal-box modal-box-lg">
+    <div id="customerProfileContent"></div>
+    <div class="modal-actions">
+      <button class="btn btn-outline" id="profileCloseBtn">Close</button>
+    </div>
+  </div>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="script.js"></script>
+</body>
+</html>
