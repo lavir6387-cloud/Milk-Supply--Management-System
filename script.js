@@ -39,7 +39,7 @@ const Store = {
 let customers = Store.get(DB_KEYS.customers, []);
 let entries = Store.get(DB_KEYS.entries, []);
 let payments = Store.get(DB_KEYS.payments, []); // { id, customerId, month(YYYY-MM), paidAmount, status, paymentDate, paymentMethod }
-let settings = Store.get(DB_KEYS.settings, { businessName: 'Shree Dairy Farm', businessPhone: '', businessAddress: '', logo: '' });
+let settings = Store.get(DB_KEYS.settings, { businessName: 'Pal Dairy Farm', businessPhone: '', businessAddress: '', logo: '' });
 let counters = Store.get(DB_KEYS.counters, { customerSeq: 0, billSeq: 0 });
 
 function persistAll() {
