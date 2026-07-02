@@ -566,6 +566,22 @@
   </div>
 </div>
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-<script src="script.js"></script>
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/12.15.0/firebase-app.js";
+
+const firebaseConfig = {
+  apiKey: "YOUR_API_KEY",
+  authDomain: "pal-dairy-farm.firebaseapp.com",
+  projectId: "pal-dairy-farm",
+  storageBucket: "pal-dairy-farm.firebasestorage.app",
+  messagingSenderId: "990912934687",
+  appId: "1:990912934687:web:df76189a738de2dd3db62a"
+};
+
+const app = initializeApp(firebaseConfig);
+
+window.firebaseApp = app;
+</script>
+<script type="module" src="script.js"></script>
 </body>
 </html>
