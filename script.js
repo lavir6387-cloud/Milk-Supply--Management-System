@@ -1,3 +1,6 @@
+import { getFirestore, collection, addDoc } from "https://www.gstatic.com/firebasejs/12.15.0/firebase-firestore.js";
+
+const db = getFirestore(window.firebaseApp);
 /* =========================================================
    DairyDesk — Milk Supply Management System
    Vanilla JavaScript — Local Storage powered
@@ -283,6 +286,12 @@ async function handleCustomerFormSubmit(e) {
       photo: photoData
     };
     customers.push(newCustomer);
+    try {
+  await addDoc(collection(db, "customers"), newCustomer);
+  console.log("Customer saved to Firebase");
+} catch (err) {
+  console.error("Firebase Error:", err);
+}
     toast('Customer Added', `${newCustomer.name} (${newCustomer.id}) was added successfully.`, 'success');
   }
 
