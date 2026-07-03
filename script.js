@@ -296,7 +296,7 @@ async function handleCustomerFormSubmit(e) {
   rate: newCustomer.rate,
   joinDate: newCustomer.joinDate,
   status: newCustomer.status
-});gi
+});
     try {
   await addDoc(collection(db, "customers"), newCustomer);
   console.log("Customer saved to Firebase");
