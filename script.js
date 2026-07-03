@@ -252,7 +252,8 @@ async function handleCustomerFormSubmit(e) {
     toast('Invalid Mobile', 'Please enter a valid 10-digit mobile number.', 'danger');
     return;
   }
-
+  console.log(customers);
+  console.log(mobile);
   const dupe = customers.find(c => c.mobile === mobile && c.id !== id);
   if (dupe) {
     toast('Duplicate Mobile', 'Another customer already uses this mobile number.', 'warning');
