@@ -337,6 +337,9 @@ async function deleteCustomer(id) {
   renderDashboard();
   toast('Customer Deleted', `${c.name} has been removed.`, 'warning');
 }
+window.openCustomerModal = openCustomerModal;
+window.deleteCustomer = deleteCustomer;
+window.viewCustomerProfile = viewCustomerProfile;
 
 function viewCustomerProfile(id) {
   const c = getCustomer(id);
