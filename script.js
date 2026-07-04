@@ -1,6 +1,9 @@
-
-import { getFirestore, collection, addDoc } from "https://www.gstatic.com/firebasejs/12.15.0/firebase-firestore.js";
-
+import {
+  getFirestore,
+  collection,
+  addDoc,
+  getDocs
+} from "https://www.gstatic.com/firebasejs/12.15.0/firebase-firestore.js";
 const db = getFirestore(window.firebaseApp);
 /* =========================================================
    DairyDesk — Milk Supply Management System
@@ -134,6 +137,26 @@ function confirmDialog(title, message) {
     cancelBtn.addEventListener('click', onCancel);
   });
 }
+async function loadCustomersFromFirebase() {
+  try {
+    const querySnapshot = await getDocs(collection(db, "customers"));
+
+    customers = [];
+
+    querySnapshot.forEach((doc) => {
+      customers.push(doc.data());
+    });
+
+    console.log("Customers loaded:", customers);
+
+    renderCustomersTable();
+    populateCustomerSelects();
+    renderDashboard();
+
+  } catch (err) {
+    console.error("Firebase Load Error:", err);
+  }
+}
 
 function fileToBase64(file) {
   return new Promise((resolve, reject) => {
@@ -144,7 +167,6 @@ function fileToBase64(file) {
     reader.readAsDataURL(file);
   });
 }
-
 /* ---------------------------------------------------------
    3. NAVIGATION
    --------------------------------------------------------- */
@@ -288,15 +310,6 @@ async function handleCustomerFormSubmit(e) {
       photo: photoData
     };
     customers.push(newCustomer);
-    await addDoc(collection(db, "customers"), {
-  customerId: newCustomer.id,
-  name: newCustomer.name,
-  mobile: newCustomer.mobile,
-  address: newCustomer.address,
-  rate: newCustomer.rate,
-  joinDate: newCustomer.joinDate,
-  status: newCustomer.status
-});
     try {
   await addDoc(collection(db, "customers"), newCustomer);
   console.log("Customer saved to Firebase");
@@ -1100,10 +1113,8 @@ function init() {
   initDailyEntryForm();
   initEventListeners();
 
-  populateCustomerSelects();
   populatePaymentMonthFilter();
-  renderCustomersTable();
-  renderDashboard();
+  loadCustomersFromFirebase();
 
   // hide loading screen
   setTimeout(() => {
