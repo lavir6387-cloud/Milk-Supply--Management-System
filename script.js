@@ -245,6 +245,10 @@ function openCustomerModal(customerId = null) {
 
   if (customerId) {
     const c = getCustomer(customerId);
+
+    console.log("customerId =", customerId);
+    console.log("customer =", c);
+    
     document.getElementById('customerModalTitle').textContent = 'Edit Customer';
     document.getElementById('customerFormId').value = c.id;
     document.getElementById('customerName').value = c.name;
