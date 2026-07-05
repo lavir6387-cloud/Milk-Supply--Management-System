@@ -248,7 +248,12 @@ function openCustomerModal(customerId = null) {
 
     console.log("customerId =", customerId);
     console.log("customer =", c);
-    
+
+    if (!c) {
+  alert("Customer not found: " + customerId);
+  return;
+}
+
     document.getElementById('customerModalTitle').textContent = 'Edit Customer';
     document.getElementById('customerFormId').value = c.id;
     document.getElementById('customerName').value = c.name;
@@ -264,7 +269,6 @@ function openCustomerModal(customerId = null) {
   }
   modal.classList.remove('hidden');
 }
-
 function closeCustomerModal() {
   document.getElementById('customerModal').classList.add('hidden');
 }
